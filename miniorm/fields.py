@@ -8,7 +8,7 @@ class Field:
 
     def __set__(self, instance, value):
         self.validate(value)
-        instance.__dict__[self.name] = value
+        instance.__dict__.get(self.name)
 
     def __get__(self, instance, owner):
         if instance is None:

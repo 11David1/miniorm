@@ -90,3 +90,36 @@ class Model:
             self._insert()
         else:
             self._update()
+
+    @classmethod
+    def _select_sql(cls):
+        names = ["id"] + list(cls._fields)
+        names = ", ".join(names)
+
+        sql = f"SELECT {names} FROM {cls.__name__.lower()}"
+        return sql
+
+    @classmethod
+    def _from_row(cls, row):
+
+        id_, *werte = row
+        kwargs = dict(zip(cls._fields, werte))
+        obj = cls(**kwargs)
+        obj.id = id_
+        return obj
+
+    @classmethod
+    def get(cls, id):
+
+        sql = cls._select_sql() + " WHERE id = ?"
+        conn = get_connection()
+        row = conn.execute(sql, [id]).fetchone()
+        if row is None:
+            return None
+        return cls._from_row(row)
+
+    @classmethod
+    def all(cls):
+        conn = get_connection()
+        rows = conn.execute(cls._select_sql()).fetchall()
+        return [cls._from_row(row) for row in rows]

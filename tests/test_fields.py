@@ -81,3 +81,12 @@ def test_save_updates_instead_of_duplicating():
     u.save()
     rows = conn.execute("SELECT id, name, age FROM user").fetchall()
     assert rows == [(1, "David", 20)]
+
+
+def test_get():
+    connect(":memory:")
+    User.create_table()
+    u = User(name="David", age=19)
+    u.save()
+    assert User.get(u.id).name == "David"
+    assert User.get(999) is None

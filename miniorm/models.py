@@ -1,7 +1,8 @@
 # Basisklasse für alle Tabellen
 # miniorm/models.py
-import sqlite3
 
+
+from miniorm.db import get_connection
 from miniorm.fields import Field
 
 
@@ -17,6 +18,7 @@ class Model:
                 cls._fields[name] = value
 
     def __init__(self, **kwargs):
+        self.id = None
         for name, value in kwargs.items():
             if name not in self._fields:
                 raise TypeError(f"{name} taucht nicht im Objekt auf.")
@@ -42,11 +44,35 @@ class Model:
 
     @classmethod
     def create_table(cls):
-        connection = sqlite3.connect("orm.db")
-        cursor = connection.cursor()
-        cursor.execute(cls.create_table_sql())
-        connection.commit()
+        conn = get_connection()
+        conn.execute(cls.create_table_sql())
+        conn.commit()
 
-    @classmethod
-    def save(cls):
-        #User(name="David", age=19).save() solle eine Zeile einfügen.
+    def _insert_sql(self):
+        werte = []
+
+        names = list(self._fields)
+        names = ", ".join(names)
+
+        for name in self._fields:
+            werte.append(getattr(self, name))
+
+        placeholder = ", ".join("?" for _ in self._fields)
+
+        sql = f"INSERT INTO {self.__class__.__name__.lower()} ({names}) VALUES ({placeholder})"
+
+        return sql, werte
+
+    def _insert(self):
+        sql, werte = self._insert_sql()
+        conn = get_connection()
+        cursor = conn.execute(sql, werte)
+        conn.commit()
+        self.id = cursor.lastrowid
+
+    def save(self):
+
+        if self.id is None:
+            self._insert()
+
+        # User(name="David", age=19).save() solle eine Zeile einfügen.

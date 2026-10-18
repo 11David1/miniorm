@@ -1,5 +1,7 @@
 # Basisklasse für alle Tabellen
 # miniorm/models.py
+import sqlite3
+
 from miniorm.fields import Field
 
 
@@ -27,8 +29,7 @@ class Model:
         return f"{self.__class__.__name__}({felder})"
 
     @classmethod
-    def create_table(cls):
-
+    def create_table_sql(cls):
         columns = []
 
         for name, field in cls._fields.items():
@@ -38,3 +39,14 @@ class Model:
 
         sql = f"CREATE TABLE IF NOT EXISTS {cls.__name__.lower()} (id INTEGER PRIMARY KEY AUTOINCREMENT, {columns})"
         return sql
+
+    @classmethod
+    def create_table(cls):
+        connection = sqlite3.connect("orm.db")
+        cursor = connection.cursor()
+        cursor.execute(cls.create_table_sql())
+        connection.commit()
+
+    @classmethod
+    def save(cls):
+        #User(name="David", age=19).save() solle eine Zeile einfügen.

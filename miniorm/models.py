@@ -18,4 +18,23 @@ class Model:
         for name, value in kwargs.items():
             if name not in self._fields:
                 raise TypeError(f"{name} taucht nicht im Objekt auf.")
+            # print(name, value)
             setattr(self, name, value)
+
+    def __repr__(self):
+        felder = ", ".join(f"{name}={getattr(self,name)!r}" for name in self._fields)
+
+        return f"{self.__class__.__name__}({felder})"
+
+    @classmethod
+    def create_table(cls):
+
+        columns = []
+
+        for name, field in cls._fields.items():
+            columns.append(f"{name} {field.sql_type()}")
+
+        columns = ", ".join(columns)
+
+        sql = f"CREATE TABLE IF NOT EXISTS {cls.__name__.lower()} (id INTEGER PRIMARY KEY AUTOINCREMENT, {columns})"
+        return sql

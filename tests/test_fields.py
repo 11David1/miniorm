@@ -49,3 +49,15 @@ def test_init_validates():
 def test_init_rejects_unknown():
     with pytest.raises(TypeError):
         User(foo=1)
+
+
+def test_repr():
+    u = User(name="David", age=19)
+    assert repr(u) == "User(name='David', age=19)"
+
+
+def test_create_table():
+    assert User.create_table() == (
+        "CREATE TABLE IF NOT EXISTS user "
+        "(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(20), age INTEGER)"
+    )

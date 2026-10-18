@@ -70,9 +70,23 @@ class Model:
         conn.commit()
         self.id = cursor.lastrowid
 
-    def save(self):
+    def _update_sql(self):
 
+        assignment = ", ".join(f"{name} = ?" for name in self._fields)
+        sql = f"UPDATE {self.__class__.__name__.lower()} SET {assignment} WHERE id = ?"
+
+        werte = [getattr(self, name) for name in self._fields]
+        werte.append(self.id)
+        return sql, werte
+
+    def _update(self):
+        sql, werte = self._update_sql()
+        conn = get_connection()
+        conn.execute(sql, werte)
+        conn.commit()
+
+    def save(self):
         if self.id is None:
             self._insert()
-
-        # User(name="David", age=19).save() solle eine Zeile einfügen.
+        else:
+            self._update()

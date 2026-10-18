@@ -1,6 +1,7 @@
 # tests/test_fields.py
 import pytest
 
+from miniorm.db import connect
 from miniorm.fields import CharField, IntegerField
 from miniorm.models import Model
 
@@ -57,7 +58,26 @@ def test_repr():
 
 
 def test_create_table():
-    assert User.create_table() == (
+    assert User.create_table_sql() == (
         "CREATE TABLE IF NOT EXISTS user "
         "(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(20), age INTEGER)"
     )
+
+
+def test_save_inserts_and_sets_id():
+    connect(":memory:")
+    User.create_table()
+    u = User(name="David", age=19)
+    u.save()
+    assert u.id == 1
+
+
+def test_save_updates_instead_of_duplicating():
+    conn = connect(":memory:")
+    User.create_table()
+    u = User(name="David", age=19)
+    u.save()
+    u.age = 20
+    u.save()
+    rows = conn.execute("SELECT id, name, age FROM user").fetchall()
+    assert rows == [(1, "David", 20)]

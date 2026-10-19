@@ -22,7 +22,6 @@ class Model:
         for name, value in kwargs.items():
             if name not in self._fields:
                 raise TypeError(f"{name} taucht nicht im Objekt auf.")
-            # print(name, value)
             setattr(self, name, value)
 
     def __repr__(self):

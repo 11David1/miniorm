@@ -1,7 +1,11 @@
 class Field:
 
-    def __init__(self):
-        pass
+    def __init__(
+        self, *, not_null: bool = False, unique: bool = False, default: object = None
+    ):
+        self.not_null = not_null
+        self.unique = unique
+        self.default = default
 
     def __set_name__(self, owner, name):
         self.name = name  # name = age # Owner = u
@@ -17,7 +21,7 @@ class Field:
         return instance.__dict__.get(self.internale_name)
 
     def validate(self, value):
-        if value is None:
+        if self.not_null is True and value is None:
             raise ValueError(f"{self.name} darf nicht None sein")
 
     def sql_type(self):
@@ -28,6 +32,8 @@ class IntegerField(Field):
 
     def validate(self, value):
         super().validate(value)
+        if value is None:
+            return
         if isinstance(value, bool) or not isinstance(value, int):
             raise TypeError(f"Erwartet Integer, bekam {type(value)}")
 
@@ -38,6 +44,8 @@ class IntegerField(Field):
 class FloatField(Field):
     def validate(self, value):
         super().validate(value)
+        if value is None:
+            return
         if isinstance(value, bool) or not isinstance(value, float):
             raise TypeError(f"Erwartet Integer, bekam {type(value)}")
 
@@ -48,12 +56,14 @@ class FloatField(Field):
 
 
 class CharField(Field):
-    def __init__(self, max_length):
-        super().__init__()
+    def __init__(self, max_length, **kwargs):
+        super().__init__(**kwargs)
         self.max_length = max_length
 
     def validate(self, value):
         super().validate(value)
+        if value is None:
+            return
         if not isinstance(value, str):
             raise TypeError(f"Erwartet String, bekam {type(value)}")
         if len(value) > self.max_length:

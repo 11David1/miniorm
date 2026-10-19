@@ -18,7 +18,7 @@ class Field:
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        return instance.__dict__.get(self.internale_name)
+        return instance.__dict__.get(self.internale_name, self.default)
 
     def validate(self, value):
         if self.not_null is True and value is None:
@@ -28,8 +28,12 @@ class Field:
         raise NotImplementedError
 
     def column_sql(self):
+
         teile = [self.sql_type()]
-        if self.default is not None:
+        if self.default is not None and isinstance(self.default, str):
+            default_clean = self.default.replace("'", "''")
+            teile.append(f"DEFAULT '{default_clean}'")
+        elif self.default is not None and isinstance(self.default, (int, float)):
             teile.append(f"DEFAULT {self.default}")
         if self.not_null is True:
             teile.append("NOT NULL")

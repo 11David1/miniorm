@@ -177,7 +177,12 @@ def test_column_sql_all_constraints():
     assert f.column_sql() == "INTEGER DEFAULT 0 NOT NULL UNIQUE"
 
 
-@pytest.mark.xfail(reason="String-Defaults brauchen noch Anführungszeichen")
+# @pytest.mark.xfail(reason="String-Defaults brauchen noch Anführungszeichen")
 def test_column_sql_default_string():
     f = CharField(max_length=10, default="unbekannt")
     assert f.column_sql() == "VARCHAR(10) DEFAULT 'unbekannt'"
+
+
+def test_column_sql_default_with_quote():
+    f = CharField(max_length=20, default="O'Brien")
+    assert f.column_sql() == "VARCHAR(20) DEFAULT 'O''Brien'"

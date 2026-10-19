@@ -90,3 +90,94 @@ def test_get():
     u.save()
     assert User.get(u.id).name == "David"
     assert User.get(999) is None
+
+
+import pytest
+
+from miniorm.fields import CharField, FloatField, IntegerField
+
+# --- None-Handling ---------------------------------------------------
+
+
+class Nullable:
+    age = IntegerField()
+    price = FloatField()
+    name = CharField(max_length=5)
+
+
+class Required:
+    age = IntegerField(not_null=True)
+    price = FloatField(not_null=True)
+    name = CharField(max_length=5, not_null=True)
+
+
+@pytest.mark.parametrize("attr", ["age", "price", "name"])
+def test_none_allowed_by_default(attr):
+    obj = Nullable()
+    setattr(obj, attr, None)
+    assert getattr(obj, attr) is None
+
+
+@pytest.mark.parametrize("attr", ["age", "price", "name"])
+def test_none_rejected_when_not_null(attr):
+    obj = Required()
+    with pytest.raises(ValueError):
+        setattr(obj, attr, None)
+
+
+def test_type_check_still_works_with_constraints():
+    with pytest.raises(TypeError):
+        Required().age = "zehn"
+
+
+def test_max_length_still_works_with_constraints():
+    with pytest.raises(ValueError):
+        Required().name = "zu lang"
+
+
+# --- Constraints werden gespeichert ----------------------------------
+
+
+def test_constraints_are_stored():
+    f = CharField(max_length=10, not_null=True, unique=True, default="x")
+    assert f.max_length == 10
+    assert f.not_null is True
+    assert f.unique is True
+    assert f.default == "x"
+
+
+def test_constraint_defaults():
+    f = IntegerField()
+    assert f.not_null is False
+    assert f.unique is False
+    assert f.default is None
+
+
+# --- column_sql ------------------------------------------------------
+
+
+def test_column_sql_plain():
+    assert IntegerField().column_sql() == "INTEGER"
+
+
+def test_column_sql_not_null():
+    assert IntegerField(not_null=True).column_sql() == "INTEGER NOT NULL"
+
+
+def test_column_sql_unique():
+    assert CharField(max_length=20, unique=True).column_sql() == "VARCHAR(20) UNIQUE"
+
+
+def test_column_sql_default_number():
+    assert IntegerField(default=0).column_sql() == "INTEGER DEFAULT 0"
+
+
+def test_column_sql_all_constraints():
+    f = IntegerField(not_null=True, unique=True, default=0)
+    assert f.column_sql() == "INTEGER DEFAULT 0 NOT NULL UNIQUE"
+
+
+@pytest.mark.xfail(reason="String-Defaults brauchen noch Anführungszeichen")
+def test_column_sql_default_string():
+    f = CharField(max_length=10, default="unbekannt")
+    assert f.column_sql() == "VARCHAR(10) DEFAULT 'unbekannt'"

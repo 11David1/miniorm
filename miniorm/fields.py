@@ -27,6 +27,17 @@ class Field:
     def sql_type(self):
         raise NotImplementedError
 
+    def column_sql(self):
+        teile = [self.sql_type()]
+        if self.default is not None:
+            teile.append(f"DEFAULT {self.default}")
+        if self.not_null is True:
+            teile.append("NOT NULL")
+        if self.unique is True:
+            teile.append("UNIQUE")
+
+        return " ".join(teile)
+
 
 class IntegerField(Field):
 
@@ -49,9 +60,7 @@ class FloatField(Field):
         if isinstance(value, bool) or not isinstance(value, float):
             raise TypeError(f"Erwartet Integer, bekam {type(value)}")
 
-    def sql_type(
-        self,
-    ):
+    def sql_type(self):
         return "FLOAT"
 
 

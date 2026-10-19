@@ -34,7 +34,7 @@ class Model:
         columns = []
 
         for name, field in cls._fields.items():
-            columns.append(f"{name} {field.sql_type()}")
+            columns.append(f"{name} {field.column_sql()}")
 
         columns = ", ".join(columns)
 
